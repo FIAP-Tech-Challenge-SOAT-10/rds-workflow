@@ -1,0 +1,71 @@
+name: Terraform Deploy RDS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Apply Terraform on AWS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.4
+
+      - name: Capturar IP público do runner
+        id: ip
+        run: |
+          echo "TF_VAR_ip_runner=$(curl -s https://checkip.amazonaws.com)/32" >> "$GITHUB_ENV"
+
+      - name: Inicializar Terraform
+        run: terraform init
+
+      - name: Validar Terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          TF_VAR_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_role_to_assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          TF_VAR_db_name: ${{ secrets.DB_NAME }}
+          TF_VAR_db_user: ${{ secrets.DB_USER }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          TF_VAR_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_role_to_assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          TF_VAR_db_name: ${{ secrets.DB_NAME }}
+          TF_VAR_db_user: ${{ secrets.DB_USER }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+      - name: Instalar cliente MySQL
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: Obter endpoint do RDS
+        id: rds
+        run: |
+          echo "RDS_HOST=$(terraform output -raw rds_endpoint | cut -d':' -f1)" >> "$GITHUB_ENV"
+
+      - name: Executar script SQL no RDS
+        run: |
+          mysql -h "$RDS_HOST" -P 3306 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < scripts/schema.sql
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
