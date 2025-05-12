@@ -28,6 +28,11 @@ jobs:
         run: |
           echo "TF_VAR_ip_runner=$(curl -s https://checkip.amazonaws.com)/32" >> "$GITHUB_ENV"
 
+      - name: Testar autenticação AWS
+        run: aws sts get-caller-identity
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
       - name: Inicializar Terraform
         run: terraform init
 
