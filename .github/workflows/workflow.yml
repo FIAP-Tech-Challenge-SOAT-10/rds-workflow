@@ -75,6 +75,19 @@ jobs:
         run: |
           echo "RDS_HOST=$(terraform output -raw rds_endpoint | cut -d':' -f1)" >> "$GITHUB_ENV"
 
+      - name: Debug host
+        run: echo "RDS_HOST is $RDS_HOST"
+        env:
+          RDS_HOST: ${{ env.RDS_HOST }}
+      
+      - name: Testar conexão MySQL
+        run: |
+          mysql -h "$RDS_HOST" -P 3306 -u "$DB_USER" -p"$DB_PASSWORD" -e "SHOW DATABASES;"
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+
       - name: Executar script SQL no RDS
         run: |
           mysql -h "$RDS_HOST" -P 3306 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < scripts/schema.sql
