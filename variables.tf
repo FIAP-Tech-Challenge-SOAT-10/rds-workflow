@@ -25,16 +25,9 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "my_ip" {
+variable "allowed_ips" {
   description = "IP público da máquina que irá acessar o banco de dados"
-  type        = string
-  default     = "127.0.0.1/32"
-  sensitive = true
-}
-
-variable "ip_runner" {
-  description = "IP público da máquina que irá rodar o runner"
-  type        = string
-  default     = "127.0.0.1/32"
+  type        = list(string)
+  default     = []
   sensitive = true
 }
