@@ -34,11 +34,6 @@ jobs:
         run: |
           echo "TF_VAR_allowed_ips=[\"${{ secrets.MY_IP }}\",\"$(curl -s https://checkip.amazonaws.com)/32\"]" >> "$GITHUB_ENV"
 
-      - name: Capturar IP público do runner
-        id: ip
-        run: |
-          echo "TF_VAR_ip_runner=$(curl -s https://checkip.amazonaws.com)/32" >> "$GITHUB_ENV"
-
       - name: Testar autenticação AWS
         run: aws sts get-caller-identity
         env:
