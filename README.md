@@ -94,3 +94,32 @@ mysql -h <endpoint> -u <DB_USER> -p<DB_PASSWORD> <DB_NAME>
 
 * Os IPs são limitados para garantir segurança
 * O script SQL é executado automaticamente após apply
+
+
+---
+
+## Diagrama: Provisionamento RDS com terraform + GitHub Actions
+
+```bash
+📦 GitHub Repository
+ └── .github/workflows/workflow.yml (Terraform CI/CD)
+
+       ⬇
+🔐 GitHub Secrets
+ ├─ AWS_ROLE_TO_ASSUME (para OIDC)
+ ├─ DB_USER / DB_PASSWORD / DB_NAME
+ └─ MY_IP (seu IP para acesso via SGBD)
+
+       ⬇
+☁️ GitHub Actions (Runner Ubuntu)
+ ├─ 1. Assume Role via OIDC
+ ├─ 2. Roda `terraform init/plan/apply`
+ ├─ 3. Captura IP do Runner (para whitelist temporário)
+ ├─ 4. Provisiona RDS privado (MySQL)
+ └─ 5. Executa `schema.sql` via mysql-client
+
+       ⬇
+🛠️ AWS Infra
+ ├─ RDS MySQL (privado)
+ └─ Security Group (libera seu IP + do runner)
+```
