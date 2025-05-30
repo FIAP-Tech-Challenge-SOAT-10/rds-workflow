@@ -1,14 +1,11 @@
 DROP TABLE IF EXISTS `Cliente`;
 CREATE TABLE `Cliente` (
-  `idCliente` int NOT NULL AUTO_INCREMENT,
   `nomeCliente` varchar(60) NOT NULL,
   `emailCliente` varchar(80) DEFAULT NULL,
-  `cpfCliente` varchar(11) DEFAULT NULL,
-  PRIMARY KEY (`idCliente`),
-  UNIQUE KEY `idCliente_UNIQUE` (`cpfCliente`)
+  `cpfCliente` varchar(11) PRIMARY KEY
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO `Cliente` VALUES (1,'Maria','maria@gmail.com','12345678900'),(2,'José','jose@gmail.com','98765432100'),(3,'Manoel','manoel@gmail.com','13243546578'),(4,'Margarida','margarida@gmail.com','19283746550');
+INSERT INTO `Cliente` VALUES ('Maria','maria@gmail.com','12345678900'),('José','jose@gmail.com','98765432100'),('Manoel','manoel@gmail.com','13243546578'),('Margarida','margarida@gmail.com','19283746550');
 
 DROP TABLE IF EXISTS `Produto`;
 CREATE TABLE `Produto` (
@@ -27,14 +24,17 @@ INSERT INTO `Produto` VALUES (1,'X-Salada','Lanche com tomate, alface, hambúrgu
 DROP TABLE IF EXISTS `Pedido`;
 CREATE TABLE `Pedido` (
   `idPedido` INT NOT NULL AUTO_INCREMENT,
-  `cliente` INT NOT NULL,
+  `cliente` VARCHAR(11) NOT NULL,
   `totalPedido` FLOAT NOT NULL DEFAULT 0,
   `tempoEstimado` TIME NOT NULL DEFAULT '00:15:00',
+  `ultimaAtualizacao` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status` VARCHAR(50) DEFAULT 'Pendente',
   `statusPagamento` VARCHAR(50) DEFAULT 'Pendente',
+
+
   PRIMARY KEY (`idPedido`),
   KEY `cliente_idx` (`cliente`),
-  CONSTRAINT `fk_cliente` FOREIGN KEY (`cliente`) REFERENCES `Cliente` (`idCliente`) ON UPDATE CASCADE
+  CONSTRAINT `fk_cliente` FOREIGN KEY (`cliente`) REFERENCES `Cliente` (`cpfCliente`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `Pedido_Produto`;
@@ -78,12 +78,19 @@ CREATE TABLE `cliente` (
 
 INSERT INTO `cliente` VALUES (1,'12345678901','Test User 1','test1@example.com','11999999999','2025-04-30 12:18:06','2025-04-30 12:18:06'),(2,'98765432101','Test User 2','test2@example.com','11988888888','2025-04-30 12:18:06','2025-04-30 12:18:06');
 
-DROP TABLE IF EXISTS `FilaAcompanhamento`;
-CREATE TABLE `FilaAcompanhamento` (
-  `idFilaAcompanhamento` int NOT NULL AUTO_INCREMENT,
-  `pedidos` int NOT NULL,
-  PRIMARY KEY (`idFilaAcompanhamento`),
-  KEY `pedidos_idx` (`pedidos`),
-  CONSTRAINT `pedidos` FOREIGN KEY (`pedidos`) REFERENCES `Pedido` (`idPedido`) ON DELETE CASCADE ON UPDATE CASCADE
+DROP TABLE IF EXISTS `Acompanhamento`;
+CREATE TABLE `Acompanhamento` (
+  `idAcompanhamento` INT AUTO_INCREMENT PRIMARY KEY,
+  `tempoEstimado` TIME NOT NULL DEFAULT '00:15:00',
+  `ultimaAtualizacao` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `FilaPedidos`;
+CREATE TABLE `FilaPedidos` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `idAcompanhamento` INT NOT NULL,
+  `idPedido` INT NOT NULL,
+  `ordem` INT NOT NULL,
+  FOREIGN KEY (`idAcompanhamento`) REFERENCES `Acompanhamento` (`idAcompanhamento`) ON DELETE CASCADE,
+  FOREIGN KEY (`idPedido`) REFERENCES `Pedido` (`idPedido`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
